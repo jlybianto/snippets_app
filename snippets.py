@@ -27,7 +27,7 @@ def put(name, snippet):
 def get(name):
   """
   Retrieve the snippet with a given name.
-  If there is no such snippet raise an error and create snippet.
+  If there is no such snippet raise an error.
   Returns the snippet.
   """
   logging.info("Retrieving snippet {!r}".format(name))
@@ -36,8 +36,13 @@ def get(name):
   cursor.execute(command, (name, ))
   connection.commit()
   row = cursor.fetchone()
-  logging.debug("Snippet retrieved successfully.")
-  return row[0]
+  
+  if not row:
+    # No snippet was found with that name.
+    logging.debug("Snippet {!r} does not exist.".format(name))
+  else:
+    logging.debug("Snippet retrieved successfully.")
+    return row[0]
 
 
 def main():
