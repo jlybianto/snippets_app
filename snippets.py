@@ -59,6 +59,20 @@ def catalog():
       print row['keyword']
   logging.debug("Snippets database inquiry complete.")
   
+
+def search(string):
+  """
+  Search snippets containing a given string.
+  Returns a list.
+  """
+  logging.info("Searching snippets database for: {}".format(string))
+  with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+    cursor.execute("select * from snippets where message like '%%' || %s || '%%'", (string, ))
+    rows = cursor.fetchall()
+    for row in rows:
+      print row['message']
+  logging.debug("Snippets database search complete.")
+  
   
 def main():
   """
@@ -68,6 +82,7 @@ def main():
   parser = argparse.ArgumentParser(description="Store and retrieve snippets of text")
   
   subparsers = parser.add_subparsers(dest="command", help="Available commands")
+  
   
   # Subparser for the put command
   logging.debug("Constructing put subparser")
@@ -84,6 +99,12 @@ def main():
   logging.debug("Constructing catalog subparser")
   subparsers.add_parser("catalog", help="Inquire all available snippet keywords")
   
+  # Subparser for the search command
+  logging.debug("Constructing search subparser")
+  search_parser = subparsers.add_parser("search", help="Search snippets for a string")
+  search_parser.add_argument("string", help="The string to match and filter")
+  
+  
   arguments = parser.parse_args(sys.argv[1:])
   # Convert parsed arguments from Namespace to dictionary
   arguments = vars(arguments)
@@ -96,9 +117,12 @@ def main():
     snippet = get(**arguments)
     print("Retrieved snippet: {!r}".format(snippet))
   elif command == "catalog":
-    print("Inquired snippet keywords:\n")
+    print("Inquired snippet keywords:")
     catalog()
-    
+  elif command == "search":
+    print("String '{}' found in these messages:".format(sys.argv[2]))
+    search(**arguments)
+
     
 if __name__ == "__main__":
   main()
